@@ -1,0 +1,139 @@
+<html>
+    <head>
+        <title>Knights' Chase</title>
+    </head>
+    <body>
+        <h1>Welcom to Knights' Chase</h1>
+        <style>
+            /* Gemini just spat out this CSS when I googled table style. it works, so why change it? */
+            table {
+                table-layout: fixed; /* Ensures equal width columns */
+                border-collapse: collapse; /* Merges borders */
+            }
+            
+            table td {
+                width: 50px; /* Equal Width */
+                height: 50px; /* Equal Height */
+                border: 1px solid black;
+                text-align: center; /* Optional: Center content */
+                vertical-align: middle; /* Optional: Center content */
+                padding: 0; /* Remove padding to keep size precise */
+            }
+        </style>
+        <table id="board"></table>
+        <script>
+            // Horrible mix of global vars and funcs which take them in!
+            const boardlength = 8;
+            const players = [];
+            const displayBoard = document.getElementById('board');
+            startGame();
+
+            function initBoard(board) {
+                displayBoard.innerHTML = '';
+                for (let rowIdx = 0; rowIdx < boardlength; rowIdx++) {
+                    const row = document.createElement('tr');
+                    displayBoard.appendChild(row);
+                    for (let colIdx = 0; colIdx < boardlength; colIdx++) {
+                        const cell = document.createElement('td');
+                        cell.addEventListener('click', () => board[rowIdx][colIdx].handler(board, cb));
+                        row.appendChild(cell);
+                    }
+                }
+
+                function cb () {
+                    activePlayerIdx = (activePlayerIdx + 1) % players.length;
+                    renderBoard(displayBoard, board, players);
+                }
+            }
+
+            function renderBoard(displayBoard, board, players) {
+                const activePlayer = players[activePlayerIdx];
+                let hasOptions = false;
+                for (let rowIdx = 0; rowIdx < boardlength; rowIdx++) {
+                    const row = displayBoard.childNodes[rowIdx];
+                    for (let colIdx = 0; colIdx < boardlength; colIdx++) {
+                        const cell = board[rowIdx][colIdx];
+                        const gCell = row.childNodes[colIdx];
+                        gCell.innerText = cell.marker;
+                        
+                        if (cell.marker == activePlayer.marker) {
+                            gCell.style.backgroundColor = 'FFCCCC';
+                        } else if (
+                            cell.marker != '//' &&
+                            (
+                                Math.abs(activePlayer.x - rowIdx) == 2 && Math.abs(activePlayer.y - colIdx) == 1 ||
+                                Math.abs(activePlayer.x - rowIdx) == 1 && Math.abs(activePlayer.y - colIdx) == 2
+                            )
+                        ) {
+                            cell.isAllowed = true;
+                            hasOptions = true;
+                        } else if (cell.marker == '//') {
+                            gCell.style.backgroundColor = 'CCCCCC';
+                        }else {
+                            gCell.style.backgroundColor = 'FFFFFF';
+                            cell.isAllowed = false;
+                        }
+                    }
+                }
+                if (!hasOptions) {
+                    alert(`No options! You lose!`);
+                    startGame();
+                }
+            }
+            
+            function buidlBoard(boardlength) {
+                const board = new Array(boardlength);
+                for (let i = 0; i < boardlength; i++) {
+                    board[i] = new Array(boardlength);
+                    for (let j = 0; j < boardlength; j++) {
+                        const newCell = new BoardCell(i, j);
+                        board[i][j] = newCell;
+                    }
+                }
+
+                return board;
+            }
+
+            function BoardCell(x, y) {
+                this.marker = '';
+                this.x = x;
+                this.y = y;
+                this.isAllowed = false;
+                this.handler = (board, cb) => onClick(this, board, cb);
+            }
+
+            function onClick(cell, board, cb) {
+                if (cell.isAllowed) {
+                    if (cell.marker && cell.marker != '//') {
+                        alert('You win!');
+                        startGame();
+
+                        return;
+                    }
+                    const activePlayer = players[activePlayerIdx];
+                    const homeCell = board[activePlayer.x][activePlayer.y];
+                    cell.marker = activePlayer.marker;
+                    homeCell.marker = '//';
+
+                    activePlayer.x = cell.x;
+                    activePlayer.y = cell.y;
+                    activePlayerIdx = (activePlayerIdx + 1) % players.length;
+                    renderBoard(displayBoard, board, players);
+                } else {
+                    alert('Cant go here! Try again.');
+                }
+            }
+
+            function startGame() {
+                players[0] = {marker: 'x', isActive: true, x: 0, y: 0};
+                players[1] = {marker: 'y', isActive: false, x: boardlength - 1, y: boardlength - 1};
+                activePlayerIdx = 0;
+
+                const board = buidlBoard(boardlength);
+                players.forEach(({ x, y, marker }) => board[x][y].marker = marker);
+                initBoard(board);
+                renderBoard(displayBoard, board, players);
+            }
+        </script>
+    </body>
+</html>
