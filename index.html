@@ -20,12 +20,19 @@
                 padding: 0; /* Remove padding to keep size precise */
             }
         </style>
+        <div>
+            <p>Player 1: <input id="p1name" label="Player 1" onkeyup="updateName(0)"></input></p>
+            <p>Player 2: <input id="p2name" label="Player 2" onkeyup="updateName(1)"></input></p>
+        </div>
         <table id="board"></table>
+
+
         <script>
             // Horrible mix of global vars and funcs which take them in!
             const boardlength = 8;
             const players = [];
             const displayBoard = document.getElementById('board');
+            let board = [];
             startGame();
 
             function initBoard(board) {
@@ -55,8 +62,11 @@
                         const cell = board[rowIdx][colIdx];
                         const gCell = row.childNodes[colIdx];
                         gCell.innerText = cell.marker;
+                        console.log(cell.marker, activePlayer.marker);
                         
-                        if (cell.marker == activePlayer.marker) {
+                        if (rowIdx == activePlayer.x && colIdx == activePlayer.y) {
+                            console.log('innertext:', gCell.innerText, 'marker:', cell.marker);
+                            
                             gCell.style.backgroundColor = 'FFCCCC';
                         } else if (
                             cell.marker != '//' &&
@@ -125,13 +135,22 @@
             }
 
             function startGame() {
-                players[0] = {marker: 'x', isActive: true, x: 0, y: 0};
-                players[1] = {marker: 'y', isActive: false, x: boardlength - 1, y: boardlength - 1};
+                players[0] = {marker: document.getElementById('p1name').value[0] || '1', name: document.getElementById('p1name').value, x: 0, y: 0};
+                players[1] = {marker: document.getElementById('p1name').value[0] || '2', name: document.getElementById('p2name').value, x: boardlength - 1, y: boardlength - 1};
                 activePlayerIdx = 0;
 
-                const board = buidlBoard(boardlength);
+                board = buidlBoard(boardlength);
                 players.forEach(({ x, y, marker }) => board[x][y].marker = marker);
                 initBoard(board);
+                renderBoard(displayBoard, board, players);
+            }
+
+            function updateName(playerIdx) {
+                const name = document.getElementById(`p${playerIdx + 1}name`).value;
+                const player = players[playerIdx];
+                player.name = name;
+                player.marker = name.substr(0,3) + (name.length > 3 ? '.' : '') || (playerIdx + 1).toString();
+                board[player.x][player.y].marker = player.marker;
                 renderBoard(displayBoard, board, players);
             }
         </script>
