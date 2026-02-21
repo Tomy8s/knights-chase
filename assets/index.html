@@ -4,6 +4,7 @@
     </head>
     <body>
         <h1>Welcome to Knights' Chase</h1>
+        <button onclick="register()">Start Web Game</button>
         <style>
             /* Gemini just spat out this CSS when I googled table style. it works, so why change it? */
             table {
@@ -40,7 +41,22 @@
             const displayBoard = document.getElementById('board');
             let board = [];
             let showHints = false;
+            let isOnlineGame = false;
             startGame();
+
+            async function register() {
+                const name = prompt('Please enter your name', 'Player 1')
+                const body = JSON.stringify({ name });
+                const registration = await fetch('/register',{method:'POST',body});
+                if (registration.status == '200') {
+                    isOnlineGame = true;
+                } else {
+                    alert('Could not join!');
+                }
+                updateName({ id: 0, value: name });
+                document.getElementById('0').value = name;
+            }
+
 
             function initBoard(board) {
                 displayBoard.innerHTML = '';
@@ -139,6 +155,10 @@
                     activePlayer.y = cell.y;
                     activePlayerIdx = (activePlayerIdx + 1) % players.length;
                     renderBoard(displayBoard, board, players);
+                    if (isOnlineGame && activePlayerIdx == 1) {
+                        const body = JSON.stringify(cell);
+                        fetch('/move', {method: 'POST', body })
+                    }
                 } else {
                     alert('Cant go here! Try again.');
                 }
